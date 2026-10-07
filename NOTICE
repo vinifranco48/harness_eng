@@ -1,0 +1,14 @@
+Harness Eng authentication adapter
+
+Authentication flow adapted from Omnigent:
+Copyright (2026) Databricks, Inc.
+https://github.com/omnigent-ai/omnigent
+Commit: f6b30fcc984ff62ab2847c7d0c96fdc417d34fdc
+Source: omnigent/onboarding/harness_install.py
+
+Licensed under the Apache License, Version 2.0.
+See third_party/omnigent/LICENSE.
+
+Adaptation: standalone Claude Code/Codex authentication module and CLI,
+Windows executable resolution, strict status verification, and environment
+isolation. Other Omnigent framework modules are not included.

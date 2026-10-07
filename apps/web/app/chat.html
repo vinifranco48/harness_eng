@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1e8449">
+  <title>Assistente · Insolo</title>
+  <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/chat.css">
+  <script src="/static/ui.js"></script>
+  <script src="/static/chat.js" defer></script>
+</head>
+<body class="chat-page app-shell-body">
+  <a class="skip-link" href="#conversation-area">Ir para a conversa</a>
+  <div class="app-layout">
+    <aside class="app-sidebar" id="sidebar" aria-label="Menu principal">
+      <header class="sidebar-header">
+        <a class="sidebar-brand" href="/" aria-label="Insolo, início"><img class="sidebar-logo-light" src="/static/assets/insolo-logo.png" alt="Insolo"><img class="sidebar-logo-dark" src="/static/assets/insolo-logo-white.png" alt="Insolo"><img class="sidebar-logo-mark" src="/static/assets/favicon.png" alt="Insolo"></a>
+        <button class="sidebar-collapse" id="sidebar-close" type="button" aria-label="Recolher menu" title="Recolher menu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+      </header>
+      <nav class="sidebar-navigation" aria-label="Navegação principal">
+        <button class="sidebar-item" id="new-chat" type="button" title="Nova conversa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 3l5 5M10 14l2-6 6-6 5 5-6 6-7 1Z"/></svg><span class="sidebar-item-label">Nova conversa</span></button>
+        <a class="sidebar-item active" href="/" aria-current="page" title="Conversas"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 1-8 8H5l-4 3V11a8 8 0 0 1 8-8h3a8 8 0 0 1 8 8Z"/><path d="M7 10h8M7 14h5"/></svg><span class="sidebar-item-label">Conversas</span></a>
+        <a class="sidebar-item" href="/connections" title="Contas"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-3a7 7 0 0 1 14 0v3"/></svg><span class="sidebar-item-label">Contas</span></a>
+      </nav>
+      <section class="sidebar-history" aria-labelledby="history-heading">
+        <div class="history-heading"><h2 id="history-heading">Recentes</h2><span class="sr-only" id="history-count">0</span></div>
+        <nav class="chat-history" id="chat-history" aria-label="Histórico de conversas"><p class="history-empty">Suas conversas aparecerão aqui.</p></nav>
+      </section>
+      <footer class="sidebar-footer"><button class="sidebar-item" type="button" data-theme-toggle><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 13.2A9 9 0 0 1 10.8 3.2 9 9 0 1 0 20.8 13.2Z"/></svg><span class="sidebar-item-label theme-label">Tema escuro</span></button></footer>
+    </aside>
+    <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" tabindex="-1" aria-label="Fechar menu"></button>
+    <div class="chat-main">
+      <header class="workspace-header">
+        <button class="workspace-menu" id="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="true" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+        <h1 class="workspace-title" id="conversation-title">Nova conversa</h1>
+        <a class="workspace-account" href="/connections"><span class="dot" id="account-dot"></span><span id="account-status">Consultando contas</span></a>
+      </header>
+      <main class="conversation-area" id="conversation-area" tabindex="-1">
+        <div class="welcome" id="welcome">
+          <h2>Por onde começamos?</h2>
+          <p>Escolha um modelo e envie sua mensagem.</p>
+          <div class="prompt-suggestions" aria-label="Sugestões para começar">
+            <button type="button" data-prompt="Quero definir um indicador de negócio. Me ajude a pensar na fórmula, na fonte dos dados e na interpretação.">Analisar um indicador</button>
+            <button type="button" data-prompt="Me ajude a revisar uma consulta SQL para o Dremio. Vou compartilhar a consulta e o resultado esperado.">Revisar uma consulta</button>
+            <button type="button" data-prompt="Me ajude a organizar uma ideia de projeto e identificar os próximos passos.">Organizar uma ideia</button>
+          </div>
+        </div>
+        <section class="messages" id="messages" aria-label="Mensagens da conversa" hidden></section>
+      </main>
+      <div class="composer-area">
+        <p class="chat-error" id="chat-error" role="alert" hidden></p>
+        <div class="conversation-meta"><span id="conversation-state" role="status">Preparando o chat…</span><button class="text-button" id="delete-chat" type="button" hidden>Excluir conversa</button></div>
+        <form class="composer" id="message-form">
+          <label class="sr-only" for="message-input">Sua mensagem</label>
+          <textarea id="message-input" rows="2" maxlength="32000" placeholder="Escreva sua mensagem…" disabled></textarea>
+          <div class="composer-bottom">
+            <div class="model-controls">
+              <div class="select-field provider-field"><label class="sr-only" for="provider-select">Provedor</label><select id="provider-select" disabled><option value="claude">Claude</option><option value="codex">Codex</option></select></div>
+              <div class="select-field model-field"><label class="sr-only" for="model-select">Modelo</label><select id="model-select" disabled><option value="">Consultando modelos…</option></select></div>
+              <div class="select-field effort-field" id="effort-field" hidden><label class="sr-only" for="effort-select">Raciocínio</label><select id="effort-select" title="Raciocínio"></select></div>
+              <button class="catalog-refresh" id="refresh-models" type="button" aria-label="Atualizar modelos" title="Atualizar modelos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M19 11a7 7 0 0 0-12-4l-3 3m1 3a7 7 0 0 0 12 4l3-3"/></svg></button>
+            </div>
+            <button class="stop-button" id="stop-response" type="button" hidden><span aria-hidden="true">■</span>Parar</button>
+            <button class="send-button" id="send-message" type="submit" aria-label="Enviar mensagem" title="Enviar mensagem" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button>
+          </div>
+          <span class="sr-only" id="composer-provider">Claude</span>
+          <p class="sr-only" id="model-caption" aria-live="polite">Carregando os modelos das suas contas…</p>
+        </form>
+        <div class="composer-hint"><span>Enter para enviar <span aria-hidden="true">·</span> Shift + Enter para nova linha</span><span id="usage-info"></span></div>
+      </div>
+    </div>
+  </div>
+  <dialog id="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">Excluir esta conversa?</h2><p class="dialog-message">O histórico desta conversa será removido desta máquina.</p><div class="delete-actions"><button class="button secondary" id="delete-cancel" type="button">Cancelar</button><button class="button primary" id="delete-confirm" type="button">Excluir conversa</button></div></dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>

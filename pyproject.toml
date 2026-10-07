@@ -1,0 +1,21 @@
+[project]
+name = "harness-eng"
+version = "0.1.0"
+description = "Chat web com Claude Code e Codex usando os logins nativos"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["fastapi>=0.115,<1", "httpx>=0.27,<1", "uvicorn>=0.30,<1"]
+
+[project.scripts]
+harness-eng = "apps.web.api.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["apps", "harness_eng"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"NOTICE" = "apps/web/api/_licenses/omnigent/NOTICE"
+"third_party/omnigent/LICENSE" = "apps/web/api/_licenses/omnigent/LICENSE"

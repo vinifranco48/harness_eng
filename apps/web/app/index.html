@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#edf2f6">
+  <title>Conexões · Harness Eng</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <a class="brand" href="/" aria-label="Harness Eng, início">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 7h7v7h8V7h7v18h-7v-7h-8v7H5z" fill="currentColor"/></svg>
+      <span>harness<span class="brand-light"> / eng</span></span>
+    </a>
+    <span class="local-badge"><span class="dot"></span> Ambiente local</span>
+  </header>
+
+  <main>
+    <div class="page-heading">
+      <div><p class="eyebrow">CONFIGURAÇÃO / CONEXÕES</p>
+        <h1>Suas contas.<br><span>Um só harness.</span></h1>
+        <p class="intro">Conecte Claude e Codex para usar suas contas<br class="desktop-break"> no Harness Eng.</p>
+      </div>
+      <div class="connection-map" aria-hidden="true">
+        <span class="map-provider claude-color">✳</span><span class="map-provider codex-color">&gt;_</span>
+        <svg viewBox="0 0 90 94"><path id="claude-wire" d="M0 18H24Q36 18 36 30V35Q36 47 50 47H90"/><path id="codex-wire" d="M0 76H24Q36 76 36 64V59Q36 47 50 47H90"/></svg>
+        <span class="map-harness">H<span id="map-indicator" class="dot"></span></span>
+      </div>
+    </div>
+
+    <section class="connections" aria-labelledby="connections-heading">
+      <div class="section-heading"><h2 id="connections-heading">Contas conectadas</h2>
+        <button class="refresh-button" id="refresh" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M19 11a7 7 0 0 0-12-4l-3 3m1 3a7 7 0 0 0 12 4l3-3"/></svg> Atualizar</button>
+      </div>
+      <div class="provider-list">
+        <article class="provider-row" id="claude-row">
+          <div class="provider-icon claude-color" aria-hidden="true">✳</div>
+          <div class="provider-info"><h3>Claude <span class="vendor">Anthropic</span></h3><p>Conecte sua conta Claude.ai.</p><div class="provider-state" id="claude-status" aria-live="polite"><span class="dot"></span><span>Consultando conexão…</span></div></div>
+          <div class="provider-actions"><button class="button primary" data-provider="claude" data-action="login" disabled>Conectar Claude <span aria-hidden="true">↗</span></button><button class="text-button switch-account" data-provider="claude" data-action="switch" hidden>Trocar conta</button><button class="button secondary logout" data-provider="claude" data-action="logout" hidden>Sair</button></div>
+        </article>
+        <article class="provider-row" id="codex-row">
+          <div class="provider-icon codex-color" aria-hidden="true">&gt;_</div>
+          <div class="provider-info"><h3>Codex <span class="vendor">OpenAI</span></h3><p>Conecte sua conta ChatGPT.</p><div class="provider-state" id="codex-status" aria-live="polite"><span class="dot"></span><span>Consultando conexão…</span></div></div>
+          <div class="provider-actions"><button class="button primary" data-provider="codex" data-action="login" disabled>Conectar Codex <span aria-hidden="true">↗</span></button><button class="text-button device-login" data-provider="codex" data-action="device" hidden>Usar código de dispositivo</button><button class="text-button switch-account" data-provider="codex" data-action="switch" hidden>Trocar conta</button><button class="button secondary logout" data-provider="codex" data-action="logout" hidden>Sair</button></div>
+        </article>
+      </div>
+      <div class="connection-footer"><span class="footer-status"><span class="dot" id="summary-dot"></span><span id="summary">Consultando suas contas</span></span><span id="last-check">—</span></div>
+    </section>
+
+    <aside class="storage-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg><div><h2>Autenticação com suas próprias contas</h2><p id="storage-description">As conexões usam os logins salvos nesta máquina. A autorização acontece diretamente no Claude ou no ChatGPT.</p></div></aside>
+    <p id="page-error" class="page-error" role="alert" hidden></p>
+  </main>
+
+  <footer class="page-footer"><span>Harness Eng</span><span>Claude + Codex</span></footer>
+
+  <dialog id="auth-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-top"><span class="dialog-provider" id="dialog-provider" aria-hidden="true">✳</span><button class="close-button" id="dialog-close" aria-label="Fechar" type="button">×</button></div>
+    <p class="eyebrow" id="dialog-label">CONECTAR CONTA</p>
+    <h2 id="dialog-title">Conectar Claude</h2>
+    <p class="dialog-message" id="dialog-message" aria-live="polite">Preparando o login…</p>
+    <div id="waiting" class="waiting"><span class="spinner"></span><span id="waiting-label">Preparando a conexão</span></div>
+    <div class="device-code" id="device-code-section" hidden><span>Código de dispositivo</span><div><code id="device-code"></code><button class="text-button" type="button" id="copy-code">Copiar</button></div></div>
+    <a class="button primary authorize-button" id="authorize" target="_blank" rel="noopener noreferrer" hidden>Abrir página de login <span aria-hidden="true">↗</span></a>
+    <form id="code-form" hidden><label for="confirmation-code">Código de confirmação</label><p>Se a página de login mostrar um código, cole-o aqui.</p><div class="code-input-row"><input id="confirmation-code" name="code" type="password" autocomplete="off" spellcheck="false" maxlength="2048" placeholder="Cole o código" required><button class="button secondary" type="submit">Confirmar</button></div></form>
+    <p class="form-error" id="dialog-error" role="alert" hidden></p>
+    <button class="button primary retry-button" id="retry" type="button" hidden>Tentar novamente</button>
+    <div class="dialog-bottom"><span id="dialog-hint">Esta janela acompanha o login automaticamente.</span><button class="text-button" id="cancel" type="button">Cancelar</button></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>
