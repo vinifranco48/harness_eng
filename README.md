@@ -75,12 +75,16 @@ controles de tema/menu ficam em `styles.css` e `ui.js`; cada página tem seu CSS
 
 ## Banco da aplicação: MariaDB
 
-A conexão do Harness Eng usa o MariaDB **10.3.39** em **192.168.85.2:3306**, com
-o banco **harness_eng**. O usuário da aplicação é **harness_app**, com permissões
-`SELECT`, `INSERT`, `UPDATE` e `DELETE` somente em `harness_eng.*`, para conexões
-originadas dos clientes **192.168.18.197** (rede local) e **192.168.99.9**
-(IP apresentado pela VPN). O acesso SSH administrativo é usado
-para o provisionamento; a aplicação usa suas próprias credenciais de banco.
+A aplicação usa MariaDB para persistir seus metadados, com compatibilidade
+validada na versão **10.3.39**. Os endereços `mysql.example.com` e
+`servidor.example.com` usados abaixo são fictícios; substitua-os pelos endereços
+do seu ambiente.
+
+Nos exemplos, o banco é **harness_eng** e o usuário da aplicação é
+**harness_app**, com permissões `SELECT`, `INSERT`, `UPDATE` e `DELETE` somente
+em `harness_eng.*`. A autorização de conexão é vinculada ao endereço de origem
+do cliente. O acesso SSH administrativo é usado para o provisionamento;
+a aplicação usa suas próprias credenciais de banco.
 
 A instância atual está com TLS desabilitado; a conexão usa TCP na rede interna.
 Para comunicação por uma rede não confiável, será necessário habilitar TLS
@@ -89,7 +93,7 @@ ou usar um túnel SSH.
 O provisionamento idempotente é executado pela raiz do projeto:
 
 ```powershell
-uv run python scripts/provision_mysql.py
+uv run python -m scripts.provision_mysql --ssh-target root@servidor.example.com
 ```
 
 Se a VPN apresentar um IP novo ao servidor, a autorização desse endereço exige
@@ -98,7 +102,7 @@ SSH e confirma as credenciais contra uma conta existente antes de criar o
 acesso; mantém as contas dos endereços anteriores.
 
 ```powershell
-uv run python -m scripts.provision_mysql --allow-current-host
+uv run python -m scripts.provision_mysql --ssh-target root@servidor.example.com --allow-current-host
 ```
 
 A configuração local fica em `.harness-eng/mysql.json`, dentro da pasta já
@@ -106,7 +110,7 @@ ignorada pelo Git. Exemplo de formato, com senha de preenchimento:
 
 ```json
 {
-  "host": "192.168.85.2",
+  "host": "mysql.example.com",
   "port": 3306,
   "database": "harness_eng",
   "user": "harness_app",
@@ -211,7 +215,7 @@ serializa as datas com `Z`.
 Execute pela raiz do projeto, usando o acesso administrativo SSH:
 
 ```powershell
-uv run python -m scripts.migrate_mysql --ssh-target root@192.168.85.2 --config .harness-eng/mysql.json
+uv run python -m scripts.migrate_mysql --ssh-target root@servidor.example.com --config .harness-eng/mysql.json
 ```
 
 O comando aplica `migrations/mysql/001_create_analyses.sql`, cria a tabela
@@ -268,7 +272,7 @@ como ferramenta para o chat. A integração analítica será uma próxima task.
 No PowerShell, informe as variáveis na sessão que executa o Harness Eng:
 
 ```powershell
-$env:DREMIO_BASE_URL = 'https://dremio.seu-dominio'
+$env:DREMIO_BASE_URL = 'https://dremio.example.com'
 $env:DREMIO_ACCESS_TOKEN = 'seu-token-dremio'
 ```
 
@@ -355,7 +359,7 @@ As operações rodam em segundo plano. A página acompanha conclusão, falha,
 expiração e cancelamento. Fechar uma janela de login pendente cancela essa
 operação. A confirmação de sucesso depende do status retornado pelo provedor.
 
-O aplicativo é uma interface web local, servida em `127.0.0.1`. Ele gerencia
+O aplicativo é uma interface web local, acessível por `localhost`. Ele gerencia
 as contas desta máquina; não é um serviço de contas para vários usuários.
 URLs de autorização e códigos de dispositivo existem apenas durante o login;
 tokens e a saída bruta dos processos não são retornados à interface.
