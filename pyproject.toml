@@ -4,7 +4,12 @@ version = "0.1.0"
 description = "Chat web com Claude Code e Codex usando os logins nativos"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["fastapi>=0.115,<1", "httpx>=0.27,<1", "uvicorn>=0.30,<1"]
+dependencies = [
+    "fastapi>=0.115,<1",
+    "httpx>=0.27,<1",
+    "pymysql>=1.1,<2",
+    "uvicorn>=0.30,<1",
+]
 
 [project.scripts]
 harness-eng = "apps.web.api.cli:main"

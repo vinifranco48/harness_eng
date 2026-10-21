@@ -34,7 +34,10 @@ class FakeAuth:
 
 class WebApiTests(unittest.TestCase):
     def setUp(self):
-        self.client = TestClient(create_app(FakeAuth()))
+        data_root = tempfile.TemporaryDirectory()
+        self.addCleanup(data_root.cleanup)
+        with patch("apps.web.api.main.MySQLConfig.is_configured", return_value=False):
+            self.client = TestClient(create_app(FakeAuth(), data_dir=Path(data_root.name)))
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)
         token = self.client.get("/api/bootstrap").json()["csrf_token"]
@@ -43,7 +46,9 @@ class WebApiTests(unittest.TestCase):
     def test_web_page_and_assets_are_served(self):
         page = self.client.get("/")
         self.assertEqual(page.status_code, 200)
-        self.assertIn("Suas contas.", page.text)
+        self.assertIn("Nova conversa", page.text)
+        self.assertIn("/static/chat.js", page.text)
+        self.assertEqual(self.client.get("/connections").status_code, 200)
         self.assertIn("frame-ancestors 'none'", page.headers["content-security-policy"])
         self.assertEqual(self.client.get("/static/app.js").status_code, 200)
         self.assertEqual(self.client.get("/static/styles.css").status_code, 200)

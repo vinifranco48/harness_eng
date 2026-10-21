@@ -29,6 +29,11 @@ _AUTH_OVERRIDES = frozenset({
     "OPENAI_API_KEY", "CODEX_API_KEY", "CODEX_ACCESS_TOKEN", "OPENAI_BASE_URL",
 })
 
+# Infrastructure credentials belong to the backend, not to provider processes.
+_BACKEND_SECRETS = frozenset({
+    "DATABASE_URL", "DREMIO_ACCESS_TOKEN", "MYSQL_PWD",
+})
+
 
 def _positive_timeout(value: float) -> float:
     if not math.isfinite(value) or value <= 0:
@@ -58,7 +63,11 @@ class AuthManager:
     def environment(self, provider: Provider | str) -> dict[str, str]:
         """Return a fresh child environment to launch the harness with this login."""
         provider = Provider(provider)
-        env = {k: v for k, v in self._env.items() if k.upper() not in _AUTH_OVERRIDES}
+        env = {
+            k: v for k, v in self._env.items()
+            if k.upper() not in _AUTH_OVERRIDES | _BACKEND_SECRETS
+            and not k.upper().startswith(("MYSQL_", "HARNESS_MYSQL_"))
+        }
         if self.auth_home:
             home_var = "CLAUDE_CONFIG_DIR" if provider == Provider.CLAUDE else "CODEX_HOME"
             env[home_var] = str(self.auth_home / provider.value)

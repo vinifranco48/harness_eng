@@ -1,4 +1,4 @@
-"""Portuguese CLI for the standalone harness authentication layer."""
+"""Portuguese CLI for the web app, native accounts and application database."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import argparse
 import json
 import math
 import sys
+from pathlib import Path
 
 from .domain.auth import AuthResult, AuthState, AuthStatus, Provider
 from .services.auth import AuthManager
@@ -60,16 +61,47 @@ def _setup(manager: AuthManager) -> int:
             print("Escolha uma opção de 0 a 6.")
 
 
+def _database_status(config_file: Path | None, json_output: bool) -> int:
+    from .adapter.mysql import MySQLClient, MySQLConfigurationError, MySQLConnectionError
+
+    def failure(message: str, code: int = 1) -> int:
+        if json_output:
+            print(json.dumps({"connected": False, "error": message}, ensure_ascii=False, indent=2))
+        else:
+            print(message, file=sys.stderr)
+        return code
+
+    try:
+        status = MySQLClient.from_env(config_file=config_file).check_connection()
+    except KeyboardInterrupt:
+        return failure("Operação interrompida.", 130)
+    except MySQLConfigurationError:
+        return failure("Configure o banco em .harness-eng/mysql.json, --config ou nas variáveis MYSQL_*.")
+    except (MySQLConnectionError, OSError, ValueError):
+        return failure("Não foi possível conectar ao banco de dados. Confira a configuração e o acesso ao servidor.")
+    if json_output:
+        print(json.dumps(status, ensure_ascii=False, indent=2))
+    else:
+        print(f"Banco {status['database']} conectado em {status['host']}:{status['port']}.")
+        print(f"Usuário: {status['user']} · Servidor: {status['server_version']} · Charset: {status['charset']}")
+    return 0 if status.get("connected") else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     # Windows redirected streams otherwise use the legacy ANSI code page.
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
-    parser = argparse.ArgumentParser(description="Login de Claude Code e Codex para Harness Eng.")
+    parser = argparse.ArgumentParser(description="Aplicação web, contas e banco de dados do Harness Eng.")
     commands = parser.add_subparsers(dest="command")
     serve = commands.add_parser("serve", help="Abrir a aplicação web local")
     serve.add_argument("--port", type=int, default=8080)
     serve.add_argument("--auth-home", help="Pasta opcional para contas isoladas")
+    database = commands.add_parser("database", help="Consultar a conexão com o banco da aplicação")
+    database_commands = database.add_subparsers(dest="database_command", required=True)
+    database_status = database_commands.add_parser("status", help="Confirmar a conexão e o banco selecionado")
+    database_status.add_argument("--config", type=Path, help="Arquivo JSON local; padrão: .harness-eng/mysql.json")
+    database_status.add_argument("--json", action="store_true", help="Retornar apenas os metadados da conexão em JSON")
     setup = commands.add_parser("setup", help="Menu interativo de autenticação")
     status = commands.add_parser("status", help="Consultar os logins salvos nos CLIs")
     status.add_argument("provider", nargs="?", choices=[p.value for p in Provider])
@@ -86,6 +118,8 @@ def main(argv: list[str] | None = None) -> int:
     for command in (setup, status, login, logout):
         command.add_argument("--auth-home", help="Pasta para logins isolados; padrão: configuração atual dos CLIs")
     args = parser.parse_args(argv)
+    if args.command == "database":
+        return _database_status(args.config, args.json)
     if args.command in {None, "serve"}:
         import uvicorn
         from .main import create_app
