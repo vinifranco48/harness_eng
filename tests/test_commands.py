@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from apps.web.api.domain.errors import CliResolutionError
@@ -30,7 +32,14 @@ class CommandTests(unittest.TestCase):
             native = folder / "node_modules/@openai/codex/node_modules/@openai/codex-win32-x64/vendor/x86_64-pc-windows-msvc/bin/codex.exe"
             native.parent.mkdir(parents=True)
             native.touch()
-            with patch("apps.web.api.services.commands.os.name", "nt"), patch("apps.web.api.services.commands.platform.machine", return_value="AMD64"), patch("apps.web.api.services.commands.shutil.which", return_value=str(shim)):
+            # Simulate Windows only in the resolver, preserving pathlib's host OS.
+            windows_os = SimpleNamespace(**vars(os))
+            windows_os.name = "nt"
+            with (
+                patch("apps.web.api.services.commands.os", windows_os),
+                patch("apps.web.api.services.commands.platform.machine", return_value="AMD64"),
+                patch("apps.web.api.services.commands.shutil.which", return_value=str(shim)),
+            ):
                 command = resolve_cli("codex", {"PATH": root})
             self.assertEqual(command.argv, (str(native),))
 

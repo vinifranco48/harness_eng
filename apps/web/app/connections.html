@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1e8449">
+  <meta name="theme-color" content="#fcfcfb">
   <title>Contas · Insolo</title>
   <link rel="icon" href="/static/assets/favicon.png" type="image/png">
   <link rel="stylesheet" href="/static/styles.css">
@@ -24,12 +24,13 @@
         <button class="sidebar-collapse" id="sidebar-close" type="button" title="Recolher menu" aria-label="Recolher menu" aria-controls="sidebar" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
       </header>
       <nav class="sidebar-navigation" aria-label="Navegação principal">
-        <a class="sidebar-item" href="/?new=1" title="Nova conversa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 3l5 5M10 14l2-6 6-6 5 5-6 6-7 1Z"/></svg><span class="sidebar-item-label">Nova conversa</span></a>
+        <a class="sidebar-item new-conversation" href="/?new=1" title="Nova conversa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="sidebar-item-label">Nova conversa</span></a>
         <a class="sidebar-item" href="/" title="Conversas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 11a8 8 0 0 1-8 8H5l-3 3V11a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/><path d="M7 10h8M7 14h5"/></svg><span class="sidebar-item-label">Conversas</span></a>
+        <a class="sidebar-item" href="/analyses" title="Análises"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16M9 16v-5m5 5V7m5 9v-3"/></svg><span class="sidebar-item-label">Análises</span></a>
         <a class="sidebar-item active" href="/connections" title="Contas" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-3a7 7 0 0 1 14 0v3"/></svg><span class="sidebar-item-label">Contas</span></a>
       </nav>
       <div class="sidebar-spacer"></div>
-      <footer class="sidebar-footer"><button class="sidebar-item" data-theme-toggle type="button" aria-label="Ativar tema escuro" title="Ativar tema escuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13z"/></svg><span class="sidebar-item-label theme-label">Tema escuro</span></button></footer>
+      <footer class="sidebar-footer"><button class="sidebar-item" data-theme-toggle type="button" aria-label="Ativar tema escuro" title="Ativar tema escuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13z"/></svg><span class="sidebar-item-label theme-label">Tema escuro</span></button><p class="sidebar-environment"><span class="dot"></span><span class="sidebar-item-label">Ambiente local</span></p></footer>
     </aside>
     <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" tabindex="-1" aria-label="Fechar menu"></button>
     <div class="accounts-workspace">
@@ -39,30 +40,30 @@
       </header>
   <main class="accounts-main" id="accounts-main" tabindex="-1">
     <header class="accounts-heading">
-      <div><h2>Suas contas</h2><p class="intro">Gerencie as contas que você usa nas conversas.</p></div>
+      <div><p class="settings-label">Preferências</p><h2>Suas contas</h2><p class="intro">Claude e Codex, no seu espaço de trabalho.</p></div>
       <a class="accounts-chat-link" href="/">Abrir conversa <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
     </header>
     <section class="connections" aria-labelledby="connections-heading">
-      <div class="section-heading"><h2 id="connections-heading">Conexões</h2>
+      <div class="section-heading"><h2 id="connections-heading">Assistentes disponíveis</h2>
         <button class="refresh-button" id="refresh" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M19 11a7 7 0 0 0-12-4l-3 3m1 3a7 7 0 0 0 12 4l3-3"/></svg> Atualizar</button>
       </div>
       <div class="provider-list">
         <article class="provider-row" id="claude-row">
           <div class="provider-card-heading"><div class="provider-icon claude-color" aria-hidden="true">✳</div><div class="provider-info"><h3>Claude</h3><span class="vendor">Anthropic</span></div></div>
-          <p class="provider-description">Conecte sua conta Claude para conversar com os modelos disponíveis.</p>
+          <p class="provider-description">Converse com os modelos da sua conta Claude.</p>
           <div class="provider-state" id="claude-status" aria-live="polite"><span class="dot"></span><span>Consultando conexão…</span></div>
           <div class="provider-actions"><button class="button primary" data-provider="claude" data-action="login" disabled>Conectar Claude <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></button><button class="text-button switch-account" data-provider="claude" data-action="switch" hidden>Trocar conta</button><button class="button secondary logout" data-provider="claude" data-action="logout" hidden>Sair</button></div>
         </article>
         <article class="provider-row" id="codex-row">
           <div class="provider-card-heading"><div class="provider-icon codex-color" aria-hidden="true">&gt;_</div><div class="provider-info"><h3>Codex</h3><span class="vendor">OpenAI</span></div></div>
-          <p class="provider-description">Use sua conta ChatGPT para conversar com os modelos do Codex.</p>
+          <p class="provider-description">Acesse os modelos do Codex com sua conta ChatGPT.</p>
           <div class="provider-state" id="codex-status" aria-live="polite"><span class="dot"></span><span>Consultando conexão…</span></div>
           <div class="provider-actions"><button class="button primary" data-provider="codex" data-action="login" disabled>Conectar Codex <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></button><button class="text-button device-login" data-provider="codex" data-action="device" hidden>Usar código de dispositivo</button><button class="text-button switch-account" data-provider="codex" data-action="switch" hidden>Trocar conta</button><button class="button secondary logout" data-provider="codex" data-action="logout" hidden>Sair</button></div>
         </article>
       </div>
       <div class="connection-footer"><span class="footer-status"><span class="dot" id="summary-dot"></span><span id="summary">Consultando suas contas</span></span><span id="last-check">—</span></div>
     </section>
-    <aside class="storage-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg><div><h2>Autorização com suas próprias contas</h2><p id="storage-description">As conexões usam os logins salvos nesta máquina. A autorização acontece diretamente no Claude ou no ChatGPT.</p></div></aside>
+    <aside class="storage-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg><div><h2>Você mantém o controle das suas contas</h2><p id="storage-description">As conexões usam os logins salvos nesta máquina. A autorização acontece diretamente no Claude ou no ChatGPT.</p></div></aside>
     <p id="page-error" class="page-error" role="alert" hidden></p>
     <div hidden aria-hidden="true"><svg><path id="claude-wire"/><path id="codex-wire"/></svg><span id="map-indicator"></span></div>
   </main>

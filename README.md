@@ -58,18 +58,19 @@ mantém os imports públicos anteriores e delega a implementação a `apps.web.a
 
 ## Interface Insolo
 
-As telas de conversas e contas seguem a identidade do portal `bi_test_2`:
-logo Insolo, fonte Nunito Sans e verde nos estados ativos. A navegação fica em
-um menu lateral com histórico compacto. O botão do painel recolhe o menu para
+As telas de conversas e contas mantêm o logo Insolo em uma interface minimalista,
+inspirada no Codex e no Claude: superfícies neutras, verde discreto nos estados
+de conexão e tipografia de sistema. A conversa vazia centraliza o campo de
+mensagem e as sugestões; com mensagens, o campo fica no rodapé. A navegação fica
+em um menu lateral com histórico compacto. O botão do painel recolhe o menu para
 uma faixa de ícones no desktop; no celular, abre uma gaveta. A preferência de
 recolhimento fica salva no navegador, assim como o tema claro ou escuro,
 alternado pelo botão na parte inferior do menu.
 
-A organização visual usa como referências o [OpenCode Web](https://opencode.ai/docs/web/)
-e o [Claude Code Desktop](https://claude.com/resources/articles/claude-code-desktop-redesign).
 Os seletores de provedor, modelo e raciocínio ficam junto ao campo de mensagem.
+As contas aparecem em uma lista com status e ações de conexão.
 
-Os logos e a fonte estão em `apps/web/app/assets/`, servidos localmente.
+Os logos e os arquivos da fonte Nunito Sans estão em `apps/web/app/assets/`, servidos localmente.
 A licença da fonte está em `assets/Nunito-Sans-OFL.txt`. Os estilos comuns e
 controles de tema/menu ficam em `styles.css` e `ui.js`; cada página tem seu CSS.
 
@@ -256,8 +257,116 @@ Invoke-RestMethod "$baseUrl/api/analyses/$($created.analysis.id)"
 Invoke-RestMethod "$baseUrl/api/analyses?limit=20&offset=0"
 ```
 
-Esta entrega disponibiliza a base persistente e a API. A página de relatórios
-e sua integração com o chat serão implementadas nas próximas tasks.
+A página `/analyses` reúne as análises e fontes importadas. O Codex pode criar
+análises e gráficos usando as ferramentas da aplicação descritas abaixo.
+
+### Ferramenta de criação de análises
+
+O nome público da ferramenta é `analysis_create`. Seu contrato JSON é gerado
+por `AnalysisCreateArgs`, usando as mesmas regras que validam a execução:
+título textual de 1 a 120 caracteres, remoção de espaços nas extremidades e
+rejeição de campos extras.
+
+O registro fica em `apps/web/api/tools/registry.py`. Na inicialização,
+`create_app()` monta `app.state.tool_executor` e `app.state.tool_definitions`
+com o mesmo `AnalysisService` usado pela API. Com o MariaDB configurado, o
+fluxo é `ToolExecutor → AnalysisCreateTool → AnalysisService → repositório`.
+Sem configuração de banco, a lista de ferramentas fica vazia e o chat
+continua disponível.
+
+Para reutilizar o registro com um serviço já construído em Python:
+
+```python
+from apps.web.api.tools.registry import create_tool_executor
+
+executor = create_tool_executor(analysis_service)
+result = executor.execute("analysis_create", {"title": "Receita Comercial"})
+```
+
+O sucesso retorna `ok`, `analysis_id` e `title`. Argumentos inválidos retornam
+`INVALID_ARGUMENTS`; falhas de persistência retornam `STORAGE_ERROR`, sem
+detalhes internos; nomes não registrados retornam `TOOL_NOT_FOUND`.
+O `ChatManager` recebe o executor e as definições. O Codex anuncia as ferramentas
+em `thread/start` com `experimentalApi`; `CodexToolBridge` traduz chamadas
+`item/tool/call` durante o RPC e o streaming. Outras solicitações permanecem
+bloqueadas. A sessão verifica thread/turn e evita repetir um `callId` durante
+a mesma execução. Uma mudança nas definições inicia uma thread compatível e
+reapresenta o histórico textual recente da conversa.
+
+### Criar gráficos a partir de uma planilha
+
+Para experimentar sem um servidor MariaDB:
+
+```bash
+uv run harness-eng serve --port 8080 --analysis-storage sqlite
+```
+
+Abra `http://localhost:8080/analyses`, importe um CSV ou Excel e escolha
+**Analisar com Codex**. Também é possível usar **Dados de exemplo**, criar uma
+análise e adicionar gráficos pelo formulário. No chat, experimente:
+
+> Use os dados de exemplo e crie uma análise de vendas de 2025, com receita
+> por região em barras e receita mensal por produto em linhas. Salve os
+> gráficos e retorne o link da análise.
+
+O modo `sqlite` é explícito e grava análises, fontes e gráficos em
+`.harness-eng/analytics.sqlite3`. O modo padrão `mysql` mantém análises no
+MariaDB configurado; fontes e gráficos ficam nesse arquivo SQLite local.
+Ao usar `--auth-home`, o arquivo fica na pasta `web` desse diretório.
+Reiniciar preserva os dados. Não há migração automática entre os modos.
+
+| Tool | Função |
+| --- | --- |
+| `dataset_import_demo` | Disponibiliza as 144 linhas fictícias de vendas de 2025 |
+| `dataset_list` | Lista fontes e tipos das colunas |
+| `dataset_get` | Retorna perfil e prévia de até 20 linhas |
+| `analysis_create` | Salva uma análise e retorna seu link |
+| `analysis_list` / `analysis_get` | Consulta análises e seus gráficos |
+| `chart_create` | Valida colunas e salva um gráfico Vega-Lite |
+
+As tools do chat estão disponíveis no Codex. O Claude continua com suas
+ferramentas desabilitadas; os formulários de análises independem do provedor.
+
+A importação aceita UTF-8 em CSV (vírgula, ponto e vírgula ou tabulação) e a
+primeira aba visível de XLSX. Limites: 5 MiB, 5.000 linhas e 50 colunas.
+O cabeçalho deve estar na primeira linha, com nomes únicos. Datas ISO e células
+de data do Excel são normalizadas em UTC; datas sem fuso são interpretadas em
+UTC. Vazios são preservados como ausentes, e zeros continuam sendo zeros.
+Fórmulas do Excel precisam de valores calculados salvos; o servidor não as
+executa. Importações idênticas reutilizam a mesma fonte.
+
+`chart_create` recebe `analysis_id`, `dataset_id`, `title`, `mark`, `x`, `y`,
+`aggregate` e `color` opcional. Os tipos são `bar`, `line`, `area` e `point`;
+os cálculos são `sum`, `mean`, `count`, `min` e `max`. Contagem usa registros
+com X e Y presentes. Linha/área exigem X numérico ou temporal. Os gráficos
+guardam uma cópia dos dados usados, não executam SQL nem carregam URLs externas.
+
+Os bundles locais fixados são Vega 6.4.0, Vega-Lite 6.5.0 e Vega-Embed 7.3.0,
+com versões, integridade e licenças em `apps/web/app/vendor`. A renderização
+SVG usa o [intérprete compatível com CSP](https://vega.github.io/vega/usage/#vega-and-content-security-policy),
+sem liberar `unsafe-eval`. É possível baixar cada gráfico em SVG.
+`uv run python scripts/vendor_vega.py` reproduz os bundles verificados.
+
+As fixtures estão em `apps/web/api/data/vendas_demo.csv` e
+`vendas_demo_totals.json`: receita R$ 5.174.501,20, custo R$ 2.868.766,21 e
+13.452 unidades. São dados fictícios, conferidos também por região, mês e
+produto. `node scripts/build_demo_workbook.mjs --data-only` reproduz as fixtures;
+sem esse argumento, o builder usa o runtime externo `@oai/artifact-tool` para
+gerar `outputs/harness-analytics-demo/vendas_demo.xlsx`.
+
+| Endpoint | Uso |
+| --- | --- |
+| `GET /api/datasets` | Catálogo de fontes |
+| `POST /api/datasets` | Upload multipart no campo `file`, nome opcional em `name` |
+| `POST /api/datasets/demo` | Importação dos dados fictícios |
+| `GET /api/datasets/{id}` | Perfil e prévia |
+| `GET/POST /api/analyses/{id}/charts` | Lista/cria gráficos da análise |
+| `GET /api/charts/{id}` | Recupera o gráfico e sua especificação |
+
+As operações de escrita usam a mesma proteção de origem e CSRF do restante
+da API. Os testes `test_analytics.py`, `test_analytics_api.py`,
+`test_chat_tools.py` e `test_vega_runtime.py` cobrem dados, persistência,
+protocolo e agregações no Vega real (Node.js necessário para este último).
 
 ## Conexão com o Dremio
 
@@ -343,8 +452,9 @@ Reiniciar o servidor interrompe as respostas em andamento e conserva o texto
 já recebido. O modo `--auth-home` também separa o banco de conversas.
 
 O chat apresenta texto, listas, links e blocos de código com botão de cópia.
-As conversas usam ferramentas desabilitadas no Claude e sandbox de leitura no
-Codex, com instruções para responder diretamente sem operar arquivos locais.
+O Claude mantém ferramentas desabilitadas. O Codex usa sandbox de leitura e
+executa somente as tools analíticas registradas na aplicação, sem operar
+arquivos ou comandos do computador.
 
 ## Gerenciar contas
 

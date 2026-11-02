@@ -36,6 +36,9 @@ class ChatStore:
             );
             CREATE INDEX IF NOT EXISTS messages_chat ON messages(chat_id, created_at);
         """)
+        columns = {row["name"] for row in self.db.execute("PRAGMA table_info(chats)")}
+        if "native_tools_signature" not in columns:
+            self.db.execute("ALTER TABLE chats ADD COLUMN native_tools_signature TEXT")
         # Native runs cannot survive a web-server restart.
         self.db.execute("UPDATE messages SET state='interrupted', error='A resposta foi interrompida ao reiniciar o servidor.' WHERE state='running'")
         self.db.commit()
@@ -64,7 +67,7 @@ class ChatStore:
         chat_id = str(uuid.uuid4())
         now = _now()
         with self.lock:
-            self.db.execute("INSERT INTO chats VALUES (?,?,?,?,?,?,?,?)",
+            self.db.execute("INSERT INTO chats (id,provider,model,effort,title,native_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)",
                             (chat_id, provider.value, model, effort, "Nova conversa", None, now, now))
             self.db.commit()
         return self.get(chat_id)
@@ -88,9 +91,9 @@ class ChatStore:
             self.db.commit()
         return assistant_id
 
-    def native(self, chat_id: str, native_id: str):
+    def native(self, chat_id: str, native_id: str, *, tools_signature: str | None = None):
         with self.lock:
-            self.db.execute("UPDATE chats SET native_id=? WHERE id=?", (native_id, chat_id))
+            self.db.execute("UPDATE chats SET native_id=?,native_tools_signature=? WHERE id=?", (native_id, tools_signature, chat_id))
             self.db.commit()
 
     def update(self, message_id: str, content: str, state: str, error: str | None, model: str, usage: dict | None):

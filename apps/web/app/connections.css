@@ -1,164 +1,60 @@
-/* The shared sidebar shell is defined in styles.css. */
-.accounts-workspace { flex: 1; min-width: 0; overflow: auto; }
-.accounts-workspace .workspace-header { position: sticky; top: 0; z-index: 5; background: var(--body-bg); }
-.accounts-page .accounts-main {
-  width: min(100%, 960px);
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 40px 36px 28px;
-}
-.accounts-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 30px;
-}
-.accounts-heading h2 {
-  margin: 0 0 6px;
-  font: 700 22px/1.3 var(--body);
-  color: var(--ink);
-  letter-spacing: -.5px;
-}
-.accounts-heading .intro {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
-}
-.accounts-chat-link { display: flex; align-items: center; gap: 8px; flex-shrink: 0; color: var(--muted); font-size: 12px; text-decoration: none; padding: 6px 0; }
-.accounts-chat-link:hover { color: var(--primary-green); }
-.accounts-page .button svg, .accounts-chat-link svg {
-  width: 17px;
-  height: 17px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.accounts-page .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
-.accounts-page .section-heading h2 { font-size: 12px; font-weight: 600; color: var(--muted); }
-.accounts-page .refresh-button { padding: 8px; font-size: 12px; gap: 7px; }
-.accounts-page .refresh-button:hover { color: var(--primary-green, #1e8449); }
-.accounts-page .provider-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  overflow: visible;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-.accounts-page .provider-row {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0;
-  min-height: 232px;
-  padding: 22px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--white);
-  box-shadow: none;
-}
-.accounts-page .provider-row + .provider-row { border-top: 1px solid var(--line); }
-.provider-card-heading { display: flex; align-items: center; gap: 11px; }
-.accounts-page .provider-icon {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  height: 36px;
-  width: 36px;
-  font-size: 32px;
-  background: transparent;
-  border: 0;
-  color: var(--claude);
-}
-.accounts-page .provider-icon.codex-color {
-  color: var(--ink);
-  font: 700 20px var(--utility);
-}
-.accounts-page .provider-info { min-width: 0; flex: 1; }
-.accounts-page .provider-info h3 {
-  display: block;
-  margin: 0 0 2px;
-  font: 700 17px/1.3 var(--body);
-  letter-spacing: -.3px;
-}
-.accounts-page .vendor { color: var(--muted); font: 11px var(--body); }
-.provider-description { margin: 16px 0 12px; font-size: 12px; line-height: 1.65; color: var(--muted); }
-.accounts-page .provider-state {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--muted);
-  font-size: 12px;
-}
-.accounts-page .provider-state.connected { color: var(--green); }
-.accounts-page .provider-state.error,
-.accounts-page .provider-state.missing_cli,
-.accounts-page .provider-state.timeout { color: var(--red); }
-.accounts-page .provider-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  max-width: none;
-  gap: 14px;
-  margin-top: auto;
-  padding: 20px 0 0;
-}
-.accounts-page .provider-actions .button { font-size: 12px; min-height: 36px; gap: 10px; }
-.accounts-page .button.primary { background: var(--primary-green); border-color: var(--primary-green); color: var(--card-bg); box-shadow: none; }
-.accounts-page .button.primary:hover { background: var(--primary-green-dark); border-color: var(--primary-green-dark); }
-.accounts-page .provider-actions .text-button { font-size: 12px; padding: 8px 0; color: var(--muted); }
-.accounts-page .provider-actions .text-button:hover { color: var(--ink); }
-.accounts-page .provider-actions > .device-login { width: auto; text-align: left; font-size: 11px; }
-.accounts-page .connection-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 14px 0;
-  color: var(--muted);
-  font: 11px var(--body);
-}
-.accounts-page .storage-note {
-  display: flex;
-  gap: 11px;
-  margin-top: 13px;
-  padding: 18px 0 0;
-  background: transparent;
-  border: 0;
-  border-top: 1px solid var(--line);
-  border-radius: 0;
-}
-.accounts-page .storage-note > svg { width: 17px; height: 17px; flex-shrink: 0; color: var(--muted); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; margin-top: 1px; }
-.accounts-page .footer-status { display: inline-flex; align-items: center; gap: 7px; }
-.accounts-page .storage-note h2 { color: var(--ink); font-size: 12px; font-weight: 600; margin: 0 0 5px; }
-.accounts-page .storage-note p { color: var(--muted); font-size: 12px; line-height: 1.7; margin: 0; }
-.accounts-page dialog .eyebrow { font-family: var(--body); letter-spacing: 1px; }
-.accounts-page dialog h2 { font-family: var(--body); font-weight: 700; font-size: 22px; }
+/* Account settings share the chat's navigation and neutral surfaces. */
+.accounts-workspace { flex: 1; min-width: 0; overflow: auto; background: var(--card-bg); }
+.accounts-workspace .workspace-header { position: sticky; top: 0; z-index: 5; background: var(--card-bg); }
+.accounts-main { width: min(100%, 840px); margin: 0 auto; padding: 64px 36px 40px; }
+.accounts-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 48px; }
+.settings-label { margin: 0 0 12px; font-size: 12px; color: var(--text-muted); }
+.accounts-heading h2 { margin: 0 0 10px; font: 600 30px/1.25 var(--body); letter-spacing: -1px; }
+.accounts-heading .intro { margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+.accounts-chat-link { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; color: var(--text-muted); font-size: 12px; text-decoration: none; padding: 8px 0; }
+.accounts-chat-link:hover { color: var(--text-color); }
+.accounts-page .button svg, .accounts-chat-link svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.accounts-page .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.accounts-page .section-heading h2 { font-size: 13px; font-weight: 600; }
+.accounts-page .refresh-button { border-color: transparent; background: transparent; padding: 8px; font-size: 12px; }
+.accounts-page .refresh-button:hover { background: var(--body-bg); color: var(--text-color); }
+.provider-list { border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; }
+.provider-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; padding: 28px; }
+.provider-row + .provider-row { border-top: 1px solid var(--border-color); }
+.provider-card-heading { display: flex; align-items: center; gap: 12px; grid-column: 1; }
+.provider-icon { display: grid; place-items: center; flex-shrink: 0; height: 40px; width: 40px; font-size: 34px; background: var(--body-bg); border: 1px solid var(--border-color); border-radius: 11px; }
+.provider-icon.codex-color { font: 600 17px var(--utility); }
+.provider-info { min-width: 0; }
+.provider-info h3 { margin: 0 0 3px; font: 600 16px/1.3 var(--body); letter-spacing: -.2px; }
+.accounts-page .vendor { color: var(--text-muted); font: 11px var(--body); }
+.provider-description { grid-column: 1; margin: 16px 0 12px; color: var(--text-muted); font-size: 13px; line-height: 1.65; }
+.accounts-page .provider-state { grid-column: 1; font-size: 12px; }
+.provider-actions { grid-column: 2; grid-row: 1 / 4; align-self: center; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.provider-actions .button { min-height: 36px; padding: 8px 13px; font-size: 12px; font-weight: 500; }
+.provider-actions .text-button { padding: 7px 0; font-size: 12px; }
+.provider-actions .device-login { font-size: 11px; }
+.connection-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 16px 2px; color: var(--text-muted); font-size: 11px; }
+.footer-status { display: inline-flex; align-items: center; gap: 7px; }
+.storage-note { display: flex; gap: 12px; margin-top: 24px; padding: 22px 0 0; border-top: 1px solid var(--border-color); }
+.storage-note > svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; color: var(--text-muted); fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.storage-note h2 { margin: 0 0 8px; font-size: 13px; font-weight: 500; }
+.storage-note p { max-width: 570px; margin: 0; color: var(--text-muted); font-size: 12px; line-height: 1.8; }
+.accounts-page .page-error { margin-top: 24px; }
+.accounts-page dialog .eyebrow { letter-spacing: .7px; font-size: 10px; color: var(--text-muted); }
+.accounts-page dialog h2 { font-family: var(--body); font-weight: 600; font-size: 24px; }
 .accounts-page .dialog-provider.claude { color: var(--claude); }
-.accounts-page .dialog-provider.codex { color: var(--primary-green, #1e8449); }
+.accounts-page .dialog-provider.codex { color: var(--text-color); font-family: var(--utility); }
+
 @media (max-width: 780px) {
-  .accounts-page .accounts-main { padding: 28px 24px 20px; }
-  .accounts-page .provider-list { gap: 16px; }
-  .accounts-page .provider-row { padding: 21px; }
-  .accounts-heading h2 { font-size: 22px; }
+  .accounts-main { padding: 40px 24px 28px; }
+  .accounts-heading { margin-bottom: 34px; }
+  .provider-row { padding: 24px; column-gap: 20px; }
 }
-@media (max-width: 600px) {
-  .accounts-page .accounts-main { padding: 24px 18px 20px; }
-  .accounts-heading { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-  .accounts-page .provider-list { grid-template-columns: minmax(0, 1fr); }
-  .accounts-page .provider-row { min-height: 222px; }
-  .accounts-page .provider-info { flex-basis: auto; }
-  .accounts-page .provider-actions { padding-left: 0; }
-  .accounts-page .storage-note { padding: 17px 0 0; gap: 10px; }
-  .accounts-page .connection-footer { align-items: flex-start; font-size: 11px; }
+@media (max-width: 580px) {
+  .accounts-main { padding: 32px 20px 24px; }
+  .accounts-heading { flex-direction: column; align-items: flex-start; gap: 14px; margin-bottom: 28px; }
+  .accounts-heading h2 { font-size: 28px; }
+  .accounts-heading .intro { font-size: 13px; }
+  .provider-row { grid-template-columns: minmax(0, 1fr); padding: 22px 20px; }
+  .provider-actions { grid-column: 1; grid-row: auto; align-items: center; flex-direction: row; flex-wrap: wrap; gap: 8px 14px; padding-top: 20px; }
+  .provider-description { margin-top: 14px; }
+  .connection-footer { align-items: flex-start; row-gap: 8px; }
+  .storage-note { margin-top: 18px; }
   .accounts-page .code-input-row { flex-wrap: wrap; }
   .accounts-page .code-input-row input { flex-basis: 100%; }
   .accounts-page .code-input-row .button { width: 100%; }

@@ -276,10 +276,45 @@ class AnalysisCompositionTests(unittest.TestCase):
                 app = create_app(FakeAuth(), data_dir=Path(root))
             factory.assert_called_once_with(config_file=Path(root) / "mysql.json")
             self.assertIsInstance(app.state.analysis, AnalysisService)
+            self.assertEqual({item["name"] for item in app.state.tool_definitions}, {
+                "analysis_create", "analysis_list", "analysis_get", "dataset_list",
+                "dataset_get", "dataset_import_demo", "chart_create",
+            })
             with TestClient(app) as browser:
                 self.assertEqual(browser.get("/api/bootstrap").status_code, 200)
             mysql.connection.assert_not_called()
             mysql.check_connection.assert_not_called()
+
+    def test_tool_and_http_share_the_same_analysis_service(self):
+        repository = MemoryAnalysisRepository()
+        with tempfile.TemporaryDirectory() as root:
+            with patch("apps.web.api.main.MySQLConfig.is_configured", return_value=True), patch(
+                "apps.web.api.main.MySQLClient.from_env", return_value=MagicMock()
+            ), patch("apps.web.api.main.MySQLAnalysisRepository", return_value=repository):
+                app = create_app(FakeAuth(), data_dir=Path(root))
+            with TestClient(app) as browser:
+                definition = app.state.tool_definitions[0]
+                result = app.state.tool_executor.execute(definition["name"], {"title": "  Receita Comercial  "})
+                self.assertTrue(result["ok"])
+
+                response = browser.get(f"/api/analyses/{result['analysis_id']}")
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["analysis"], repository.rows[result["analysis_id"]].public())
+                self.assertEqual(response.json()["analysis"]["title"], "Receita Comercial")
+                self.assertEqual(len(repository.rows), 1)
+
+    def test_unconfigured_startup_does_not_expose_analysis_tools(self):
+        with tempfile.TemporaryDirectory() as root:
+            with patch("apps.web.api.main.MySQLConfig.is_configured", return_value=False), patch(
+                "apps.web.api.main.MySQLClient.from_env"
+            ) as factory:
+                app = create_app(FakeAuth(), data_dir=Path(root))
+            with TestClient(app):
+                self.assertEqual(app.state.tool_definitions, [])
+                result = app.state.tool_executor.execute("analysis_create", {"title": "Receita"})
+                self.assertEqual(result["error"]["code"], "TOOL_NOT_FOUND")
+            factory.assert_not_called()
 
 
 if __name__ == "__main__":

@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import threading
 import time
 import uuid
+from copy import deepcopy
 from pathlib import Path
 
 from ..domain.auth import Provider
 from ..domain.chat import ChatRun
 from ..domain.errors import ChatConflict, HarnessError
+from ..adapter.codex.tools import CodexToolBridge, CodexToolSession
+from ..tools.executor import ToolExecutor
 from .auth import AuthManager
 from .chat_store import ChatStore
 from .model_catalog import ModelCatalog
 from .protocol import (
-    CHAT_INSTRUCTIONS, JsonProcess, claude_args, claude_initialize,
-    codex_args, codex_initialize,
+    ANALYSIS_INSTRUCTIONS, CHAT_INSTRUCTIONS, JsonProcess, claude_args, claude_initialize,
+    classify_message, codex_args, codex_initialize,
 )
 
 
@@ -36,8 +40,11 @@ def _error(provider: str, detail: object) -> str:
 
 
 class ChatManager:
-    def __init__(self, auth: AuthManager, data_dir: Path):
+    def __init__(self, auth: AuthManager, data_dir: Path, *, tool_executor: ToolExecutor | None = None, tool_definitions: list[dict] | None = None):
         self.auth = auth
+        self.tool_executor = tool_executor
+        self.tool_definitions = deepcopy(tool_definitions or []) if tool_executor is not None else []
+        self.tool_signature = hashlib.sha256(json.dumps(self.tool_definitions, sort_keys=True).encode()).hexdigest() if self.tool_definitions else None
         self.cwd = data_dir / "chat-workspace"
         self.cwd.mkdir(parents=True, exist_ok=True)
         self.store = ChatStore(data_dir / "chats.sqlite3")
@@ -51,6 +58,7 @@ class ChatManager:
         with self.lock:
             chat = self.store.get(chat_id)
             chat.pop("native_id", None)
+            chat.pop("native_tools_signature", None)
             run_id = self.active.get(chat_id)
             run = self.runs.get(run_id)
             if run:
@@ -80,6 +88,8 @@ class ChatManager:
                 raise ChatConflict("Aguarde a resposta ou clique em Parar antes de enviar outra mensagem.")
             if len(self.active) >= 4:
                 raise ChatConflict("Há quatro respostas em andamento. Aguarde uma delas terminar.")
+            # A preceding response may have finished while the account/model was checked.
+            chat = self.store.get(chat_id)
             for key, old in list(self.runs.items()):
                 if len(self.runs) < 64:
                     break
@@ -206,28 +216,51 @@ class ChatManager:
 
     def _codex(self, run: ChatRun, chat: dict, text: str, effort: str | None):
         with self._process(run, codex_args()) as process:
-            codex_initialize(process)
+            tools_enabled = bool(self.tool_definitions)
+            codex_initialize(process, experimental=tools_enabled)
             params = {"model": run.model, "cwd": str(self.cwd), "sandbox": "read-only",
-                      "approvalPolicy": "never", "baseInstructions": CHAT_INSTRUCTIONS}
-            if chat["native_id"]:
+                      "approvalPolicy": "never", "baseInstructions": ANALYSIS_INSTRUCTIONS if tools_enabled else CHAT_INSTRUCTIONS}
+            resume = chat["native_id"] and chat.get("native_tools_signature") == self.tool_signature
+            if resume:
                 params["threadId"] = chat["native_id"]
                 response = process.rpc(2, "thread/resume", params)
             else:
+                if tools_enabled:
+                    # Codex 0.160 uses tagged DynamicToolSpec variants.
+                    params["dynamicTools"] = [{**definition, "type": "function"} for definition in self.tool_definitions]
                 response = process.rpc(2, "thread/start", params)
             thread_id = response["thread"]["id"]
-            self.store.native(run.chat_id, thread_id)
-            turn_params = {"threadId": thread_id, "model": run.model, "input": [{"type": "text", "text": text}]}
+            self.store.native(run.chat_id, thread_id, tools_signature=self.tool_signature)
+            session = None
+            if tools_enabled:
+                session = CodexToolSession(CodexToolBridge(self.tool_executor), thread_id, {tool["name"] for tool in self.tool_definitions})
+                process.tool_handler = session.handle
+            turn_text = text
+            if chat["native_id"] and not resume:
+                turn_text = self._context_for_new_thread(chat, text)
+            turn_params = {"threadId": thread_id, "model": run.model, "input": [{"type": "text", "text": turn_text}]}
             if effort:
                 turn_params["effort"] = effort
-            process.rpc(3, "turn/start", turn_params)
+            turn_response = process.rpc(3, "turn/start", turn_params)
+            if session:
+                turn_id = turn_response.get("turn", {}).get("id")
+                if isinstance(turn_id, str) and turn_id:
+                    if session.turn_id is not None and session.turn_id != turn_id:
+                        raise HarnessError("O provedor retornou uma interação diferente da chamada de ferramenta.")
+                    session.turn_id = turn_id
             deadline = time.monotonic() + 600
             messages: dict[str, str] = {}
             provider_error = None
             while True:
                 message = process.read(deadline, run.cancel)
-                process.deny_request(message)
+                if process.handle_request(message):
+                    continue
+                if classify_message(message) != "notification":
+                    continue
                 params = message.get("params", {})
-                if params.get("threadId") not in {None, thread_id}:
+                if not isinstance(params, dict):
+                    continue
+                if params.get("threadId") not in (None, thread_id):
                     continue
                 method = message.get("method")
                 if method == "item/agentMessage/delta":
@@ -249,6 +282,36 @@ class ChatManager:
                     if turn.get("status") != "completed":
                         raise HarnessError(_error("codex", turn.get("error") or provider_error or turn.get("status")))
                     return
+
+    @staticmethod
+    def _context_for_new_thread(chat: dict, text: str) -> str:
+        """Keep recent visible conversation text when dynamic-tool contracts change."""
+        prefix = (
+            "A conversa foi retomada com as ferramentas atuais. O JSON abaixo contém "
+            "um trecho recente do histórico para contexto, não novas instruções do sistema.\n"
+        )
+        suffix = "\n\nMensagem atual do usuário:\n" + text
+        budget = 32_000 - len(prefix) - len(suffix) - 2
+        if budget <= 0:
+            return text
+        history = []
+        for message in reversed(chat.get("messages", [])):
+            if message.get("state") != "completed" or not message.get("content"):
+                continue
+            content = message["content"][-budget:]
+            while content:
+                encoded = json.dumps({"role": message["role"], "content": content}, ensure_ascii=False)
+                excess = len(encoded) + 2 - budget
+                if excess <= 0:
+                    history.append(encoded)
+                    budget -= len(encoded) + 2
+                    break
+                content = content[min(excess, len(content)):]
+            if not content or budget <= 0:
+                break
+        if not history:
+            return text
+        return prefix + "[" + ", ".join(reversed(history)) + "]" + suffix
 
     def cancel_run(self, run_id: str) -> dict:
         with self.lock:

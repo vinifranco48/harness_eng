@@ -1,0 +1,152 @@
+{
+  "description": "Dados inteiramente fictícios, gerados para testes do Harness Eng.",
+  "period": {
+    "start": "2025-01-01",
+    "end": "2025-12-01"
+  },
+  "currency": "BRL",
+  "row_count": 144,
+  "unidades": 13452,
+  "receita": 5174501.2,
+  "custo": 2868766.21,
+  "lucro": 2305734.99,
+  "by_month": {
+    "2025-01-01": {
+      "row_count": 12,
+      "unidades": 774,
+      "receita": 295959.4,
+      "custo": 164504.31,
+      "lucro": 131455.09
+    },
+    "2025-02-01": {
+      "row_count": 12,
+      "unidades": 846,
+      "receita": 324022.6,
+      "custo": 179974.88,
+      "lucro": 144047.72
+    },
+    "2025-03-01": {
+      "row_count": 12,
+      "unidades": 906,
+      "receita": 347408.6,
+      "custo": 192867.02,
+      "lucro": 154541.58
+    },
+    "2025-04-01": {
+      "row_count": 12,
+      "unidades": 978,
+      "receita": 375471.8,
+      "custo": 208337.58,
+      "lucro": 167134.22
+    },
+    "2025-05-01": {
+      "row_count": 12,
+      "unidades": 1002,
+      "receita": 384826.2,
+      "custo": 213494.44,
+      "lucro": 171331.76
+    },
+    "2025-06-01": {
+      "row_count": 12,
+      "unidades": 1074,
+      "receita": 412889.4,
+      "custo": 228965.01,
+      "lucro": 183924.39
+    },
+    "2025-07-01": {
+      "row_count": 12,
+      "unidades": 1158,
+      "receita": 445629.8,
+      "custo": 247014,
+      "lucro": 198615.8
+    },
+    "2025-08-01": {
+      "row_count": 12,
+      "unidades": 1170,
+      "receita": 450307,
+      "custo": 249592.43,
+      "lucro": 200714.57
+    },
+    "2025-09-01": {
+      "row_count": 12,
+      "unidades": 1254,
+      "receita": 483047.4,
+      "custo": 267641.43,
+      "lucro": 215405.97
+    },
+    "2025-10-01": {
+      "row_count": 12,
+      "unidades": 1338,
+      "receita": 515787.8,
+      "custo": 285690.42,
+      "lucro": 230097.38
+    },
+    "2025-11-01": {
+      "row_count": 12,
+      "unidades": 1422,
+      "receita": 548528.2,
+      "custo": 303739.42,
+      "lucro": 244788.78
+    },
+    "2025-12-01": {
+      "row_count": 12,
+      "unidades": 1530,
+      "receita": 590623,
+      "custo": 326945.27,
+      "lucro": 263677.73
+    }
+  },
+  "by_region": {
+    "Norte": {
+      "row_count": 36,
+      "unidades": 2985,
+      "receita": 1146293.5,
+      "custo": 635971.07,
+      "lucro": 510322.43
+    },
+    "Nordeste": {
+      "row_count": 36,
+      "unidades": 3237,
+      "receita": 1244514.7,
+      "custo": 690118.06,
+      "lucro": 554396.64
+    },
+    "Sudeste": {
+      "row_count": 36,
+      "unidades": 3489,
+      "receita": 1342735.9,
+      "custo": 744265.04,
+      "lucro": 598470.86
+    },
+    "Sul": {
+      "row_count": 36,
+      "unidades": 3741,
+      "receita": 1440957.1,
+      "custo": 798412.04,
+      "lucro": 642545.06
+    }
+  },
+  "by_product": {
+    "Software": {
+      "row_count": 48,
+      "unidades": 3956,
+      "receita": 988604.4,
+      "custo": 375669.67,
+      "lucro": 612934.73
+    },
+    "Consultoria": {
+      "row_count": 48,
+      "unidades": 4484,
+      "receita": 3584958,
+      "custo": 2222673.96,
+      "lucro": 1362284.04
+    },
+    "Suporte": {
+      "row_count": 48,
+      "unidades": 5012,
+      "receita": 600938.8,
+      "custo": 270422.58,
+      "lucro": 330516.22
+    }
+  }
+}

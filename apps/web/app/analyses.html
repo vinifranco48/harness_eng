@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fcfcfb">
+  <title>Análises · Insolo</title>
+  <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/analyses.css">
+  <script src="/static/ui.js"></script>
+  <script src="/static/vendor/vega-6.4.0.min.js" defer></script>
+  <script src="/static/vendor/vega-lite-6.5.0.min.js" defer></script>
+  <script src="/static/vendor/vega-embed-7.3.0.min.js" defer></script>
+  <script src="/static/analyses.js" defer></script>
+</head>
+<body class="app-shell-body">
+  <a class="skip-link" href="#analytics-main">Ir para as análises</a>
+  <div class="app-layout">
+    <aside class="app-sidebar" id="sidebar" aria-label="Menu principal">
+      <header class="sidebar-header">
+        <a class="sidebar-brand" href="/" aria-label="Insolo, início">
+          <img class="sidebar-logo-light" src="/static/assets/insolo-logo.png" alt="Insolo" width="120" height="27">
+          <img class="sidebar-logo-dark" src="/static/assets/insolo-logo-white.png" alt="Insolo" width="120" height="34">
+          <img class="sidebar-logo-mark" src="/static/assets/favicon.png" alt="Insolo" width="28" height="28">
+        </a>
+        <button class="sidebar-collapse" id="sidebar-close" type="button" title="Recolher menu" aria-label="Recolher menu" aria-controls="sidebar" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+      </header>
+      <nav class="sidebar-navigation" aria-label="Navegação principal">
+        <a class="sidebar-item new-conversation" href="/?new=1" title="Nova conversa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="sidebar-item-label">Nova conversa</span></a>
+        <a class="sidebar-item" href="/" title="Conversas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 11a8 8 0 0 1-8 8H5l-3 3V11a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/><path d="M7 10h8M7 14h5"/></svg><span class="sidebar-item-label">Conversas</span></a>
+        <a class="sidebar-item active" aria-current="page" href="/analyses" title="Análises"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16M9 16v-5m5 5V7m5 9v-3"/></svg><span class="sidebar-item-label">Análises</span></a>
+        <a class="sidebar-item" href="/connections" title="Contas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-3a7 7 0 0 1 14 0v3"/></svg><span class="sidebar-item-label">Contas</span></a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <footer class="sidebar-footer"><button class="sidebar-item" data-theme-toggle type="button" aria-label="Ativar tema escuro" title="Ativar tema escuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13z"/></svg><span class="sidebar-item-label theme-label">Tema escuro</span></button><p class="sidebar-environment"><span class="dot"></span><span class="sidebar-item-label">Ambiente local</span></p></footer>
+    </aside>
+    <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" tabindex="-1" aria-label="Fechar menu"></button>
+    <div class="accounts-workspace analytics-workspace">
+      <header class="workspace-header">
+        <button class="workspace-menu" id="menu-toggle" type="button" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+        <h1 class="workspace-title">Análises</h1>
+        <a class="workspace-account" href="/">Conversar com o assistente ↗</a>
+      </header>
+      <main class="analytics-main" id="analytics-main" tabindex="-1">
+        <p class="page-error" id="page-error" role="alert" hidden></p>
+        <p class="chart-status" id="loading-status" role="status">Carregando suas análises…</p>
+        <section id="library" hidden>
+          <header class="analytics-heading"><div><h2>Seus dados, em perspectiva.</h2><p>Importe uma planilha e transforme perguntas em gráficos.</p></div><button class="button primary" id="new-analysis" type="button">Nova análise</button></header>
+          <div class="analytics-grid">
+            <section><div class="analytics-section-heading"><h3>Suas análises</h3><button class="text-button" id="refresh-analyses" type="button">Atualizar</button></div><div class="analysis-list" id="analysis-list"></div><button class="text-button" id="more-analyses" type="button" hidden>Carregar mais</button></section>
+            <section class="data-section"><div class="analytics-section-heading"><h3>Bases de dados</h3></div><div class="upload-actions"><button class="button secondary" id="upload-trigger" type="button">Importar planilha</button><button class="button secondary" id="import-demo" type="button">Usar dados de exemplo</button><input type="file" id="dataset-file" accept=".csv,.xlsx" hidden></div><p class="upload-caption">CSV ou Excel (.xlsx), até 5 MB e 5.000 linhas. Use a primeira linha como cabeçalho. A base de exemplo contém vendas fictícias de 2025.</p><div class="dataset-list" id="dataset-list"></div></section>
+          </div>
+        </section>
+        <section id="analysis-detail" hidden>
+          <a class="analysis-back" href="/analyses">← Todas as análises</a>
+          <header class="analytics-heading"><div><h2 id="analysis-title"></h2><p id="analysis-meta"></p></div><div class="analytics-actions"><a class="button secondary" id="analysis-chat" href="/">Criar com Codex</a><button class="button primary" id="new-chart" type="button">Adicionar gráfico</button></div></header>
+          <div class="chart-grid" id="chart-grid"></div>
+          <div class="empty-state" id="charts-empty" hidden><h3>Comece pela sua primeira pergunta</h3><p>Adicione um gráfico ou peça ao Codex para criá-lo usando uma base importada.</p></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <dialog id="analysis-dialog" aria-labelledby="new-analysis-title"><h2 id="new-analysis-title">Nova análise</h2><p class="dialog-message">Dê um nome para reunir seus gráficos.</p><form id="analysis-form"><div class="form-field"><label for="analysis-name">Nome da análise</label><input id="analysis-name" required maxlength="120" placeholder="Receita comercial de 2025"></div><p class="form-error" id="analysis-form-error" role="alert" hidden></p><div class="form-actions"><button class="button secondary" type="button" data-close="analysis-dialog">Cancelar</button><button class="button primary" type="submit">Criar análise</button></div></form></dialog>
+  <dialog id="chart-dialog" aria-labelledby="new-chart-title"><h2 id="new-chart-title">Adicionar gráfico</h2><form id="chart-form"><div class="form-grid">
+    <div class="form-field full"><label for="chart-title">Título</label><input id="chart-title" required maxlength="120" placeholder="Receita por região"></div>
+    <div class="form-field full"><label for="chart-dataset">Base de dados</label><select id="chart-dataset" required></select></div>
+    <div class="form-field"><label for="chart-mark">Visualização</label><select id="chart-mark"><option value="bar">Barras</option><option value="line">Linhas</option><option value="area">Área</option><option value="point">Pontos</option></select></div>
+    <div class="form-field"><label for="chart-aggregate">Cálculo</label><select id="chart-aggregate"><option value="sum">Soma</option><option value="mean">Média</option><option value="count">Contagem</option><option value="min">Mínimo</option><option value="max">Máximo</option></select></div>
+    <div class="form-field"><label for="chart-x">Eixo horizontal</label><select id="chart-x" required></select></div>
+    <div class="form-field"><label for="chart-y">Valor</label><select id="chart-y" required></select></div>
+    <div class="form-field full"><label for="chart-color">Separar por cor</label><select id="chart-color"><option value="">Sem agrupamento adicional</option></select></div>
+  </div><p class="form-error" id="chart-form-error" role="alert" hidden></p><div class="form-actions"><button class="button secondary" type="button" data-close="chart-dialog">Cancelar</button><button class="button primary" type="submit">Salvar gráfico</button></div></form></dialog>
+  <dialog id="preview-dialog" aria-labelledby="preview-title"><div class="dialog-top"><h2 id="preview-title">Prévia dos dados</h2><button class="close-button" type="button" data-close="preview-dialog" aria-label="Fechar prévia">×</button></div><p class="dialog-message" id="preview-caption"></p><div class="preview-scroll"><table class="data-preview" id="data-preview"></table></div></dialog>
+  <div class="chart-tooltip" id="chart-tooltip" hidden></div>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>

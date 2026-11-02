@@ -15,4 +15,5 @@ wheels/
 !.env.example
 .harness-eng/
 output/
+outputs/
 .playwright-cli/

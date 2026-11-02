@@ -97,6 +97,7 @@ def main(argv: list[str] | None = None) -> int:
     serve = commands.add_parser("serve", help="Abrir a aplicação web local")
     serve.add_argument("--port", type=int, default=8080)
     serve.add_argument("--auth-home", help="Pasta opcional para contas isoladas")
+    serve.add_argument("--analysis-storage", choices=["mysql", "sqlite"], default="mysql", help="Use sqlite para análises locais sem MariaDB")
     database = commands.add_parser("database", help="Consultar a conexão com o banco da aplicação")
     database_commands = database.add_subparsers(dest="database_command", required=True)
     database_status = database_commands.add_parser("status", help="Confirmar a conexão e o banco selecionado")
@@ -129,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("A porta deve estar entre 1 e 65535.")
         print(f"Harness Eng: http://localhost:{port}", flush=True)
         uvicorn.run(
-            create_app(AuthManager(auth_home=getattr(args, "auth_home", None))),
+            create_app(AuthManager(auth_home=getattr(args, "auth_home", None)), analysis_storage=getattr(args, "analysis_storage", "mysql")),
             host="127.0.0.1", port=port, log_level="warning",
         )
         return 0

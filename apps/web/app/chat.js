@@ -50,8 +50,10 @@ function updateControls() {
   $("delete-chat").disabled = busy;
   $("refresh-models").disabled = busy || !!currentRun;
   $("composer-provider").textContent = `${providerNames[$("provider-select").value]}${model ? " / " + model.name : ""}`;
-  $("conversation-state").textContent = currentRun ? "Recebendo a resposta…" : sending ? "Enviando mensagem…" : loading ? "Carregando…" : currentChat ? currentChat.title : connected && model ? "Pronto para conversar" : "Conecte uma conta em Contas para começar";
+  $("connection-notice").hidden = busy || !!connected;
+  $("conversation-state").textContent = currentRun ? "Recebendo a resposta…" : sending ? "Enviando mensagem…" : loading ? "Carregando…" : currentChat ? "Conversa salva" : connected && model ? "Pronto para conversar" : "";
   $("conversation-title").textContent = currentChat?.title || "Nova conversa";
+  document.querySelector(".chat-main").classList.toggle("is-empty", !currentChat?.messages.length);
 }
 
 function populateModels(preferred, effort) {
@@ -84,13 +86,13 @@ async function loadModels(force = false) {
   try {
     const data = await api(`/api/models${force ? "?refresh=true" : ""}`);
     catalogs = data.providers;
-    if (!currentChat && !selectedCatalog()?.connected) $("provider-select").value = catalogs.find((item) => item.connected && item.models.length)?.provider || "claude";
+    if (!currentChat && !selectedCatalog()?.connected) $("provider-select").value = catalogs.find((item) => item.connected && item.models.length)?.provider || catalogs.find((item) => item.connected)?.provider || "claude";
     for (const option of $("provider-select").options) option.disabled = !catalogs.find((item) => item.provider === option.value)?.connected;
     const count = catalogs.filter((item) => item.connected).length;
-  $("account-status").textContent = count === 2 ? "2 contas conectadas" : count === 1 ? "1 conta conectada" : "Conectar contas";
+    $("account-status").textContent = count === 2 ? "2 contas conectadas" : count === 1 ? "1 conta conectada" : "Conectar contas";
     $("account-dot").classList.toggle("connected", count > 0);
     populateModels(currentChat?.model || oldModel, currentChat?.effort || oldEffort);
-    if (catalogs.every((item) => !item.models.length)) showError(selectedCatalog()?.error || "Abra Contas para conectar Claude ou Codex.");
+    if (catalogs.every((item) => !item.models.length) && catalogs.some((item) => item.connected)) showError(selectedCatalog()?.error || "Não foi possível carregar os modelos. Tente atualizar a lista.");
   } catch (error) { showError(error.message); }
   finally { updateControls(); }
 }
@@ -156,9 +158,11 @@ function inline(parent, text) {
     else {
       const parts = token.match(/^\[([^\]]+)\]\((.+)\)$/);
       try {
-        const url = new URL(parts[2]);
+        const url = new URL(parts[2], window.location.href);
         if (!["http:", "https:"].includes(url.protocol)) throw new Error();
-        const link = document.createElement("a"); link.textContent = parts[1]; link.href = url.href; link.target = "_blank"; link.rel = "noopener noreferrer"; parent.append(link);
+        const link = document.createElement("a"); link.textContent = parts[1]; link.href = url.href;
+        if (url.origin !== window.location.origin) { link.target = "_blank"; link.rel = "noopener noreferrer"; }
+        parent.append(link);
       } catch { parent.append(document.createTextNode(token)); }
     }
     previous = match.index + token.length;
@@ -336,13 +340,20 @@ $("delete-confirm").addEventListener("click", async () => {
     await Promise.all([loadModels(), loadHistory()]);
     const url = new URL(window.location.href);
     const startNew = url.searchParams.get("new") === "1";
+    const prompt = url.searchParams.get("prompt");
+    const provider = url.searchParams.get("provider");
     if (startNew) {
       remember("harness.chat", null);
       url.searchParams.delete("new");
-      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
     }
+    url.searchParams.delete("prompt"); url.searchParams.delete("provider");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
     const saved = startNew ? null : remembered("harness.chat");
     if (saved) await openChat(saved);
+    if (!saved && providerNames[provider] && catalogs.some((item) => item.provider === provider && item.connected)) {
+      $("provider-select").value = provider; populateModels();
+    }
+    if (prompt) { $("message-input").value = prompt.slice(0, 32000); resizeInput(); }
   } catch (error) { showError(error.message); }
   finally { loading = false; updateControls(); }
 })();
